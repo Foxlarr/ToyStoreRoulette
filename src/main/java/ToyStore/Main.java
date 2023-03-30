@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 
 class Toy {
     private int id;
@@ -47,10 +48,16 @@ class Toy {
 class ToyStore {
     private List<Toy> toys;
     private List<Toy> prizes;
+    private int currentPrizeId;
+    private String fileName;
+    private int prizeIndex;
 
     public ToyStore() {
         toys = new ArrayList<>();
         prizes = new ArrayList<>();
+        currentPrizeId = 1;
+        fileName = "";
+        prizeIndex = 0;
     }
 
     public void addToy(int id, String name, int quantity, int weight) {
@@ -89,36 +96,52 @@ class ToyStore {
             System.out.println("No prizes left!");
             return;
         }
-        Toy prize = prizes.remove(0);
-        try (FileWriter writer = new FileWriter("prizes.txt", true)) {
-            writer.write(prize.getName() + "\n");
-        } catch (IOException e) {
-            System.out.println("Failed to write prize to file!");
-            return;
+        Optional<Toy> optionalPrize = prizes.stream()
+                .skip(prizeIndex)
+                .filter(p -> p.getQuantity() > 0)
+                .findFirst();
+        if (optionalPrize.isPresent()) {
+            Toy prize = optionalPrize.get();
+            prizes.remove(prize);
+            try (FileWriter writer = new FileWriter("prizes_" + currentPrizeId + ".txt", false)) {
+                writer.write(prize.getName() + "\n");
+                fileName = "prizes_" + currentPrizeId + ".txt";
+                currentPrizeId++;
+                prizeIndex++;
+            } catch (IOException e) {
+                System.out.println("Failed to write prize to file!");
+                return;
+            }
+            System.out.println("Congratulations! You won a " + prize.getName());
+        } else {
+            System.out.println("You have already won all available prizes!");
         }
-        System.out.println("Congratulations! You won a " + prize.getName());
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 }
 
 public class Main {
     public static void main(String[] args) {
         ToyStore store = new ToyStore();
-        store.addToy(1, "Teddy bear", 10, 10);
-        store.addToy(2, "Doll", 5, 20);
-        store.addToy(3, "Car", 3, 5);
+        store.addToy(1, "Teddy bear", 5, 3);
+        store.addToy(2, "Race car", 3, 2);
+        store.addToy(3, "Doll", 2, 1);
+        store.addToy(4, "LEGO", 4, 4);
+        store.addToy(5, "Action figure", 3, 3);
+        store.addToy(6, "Puzzle", 2, 2);
+        store.addToy(7, "Board game", 5, 4);
+        store.addToy(8, "Art set", 4, 3);
+        store.addToy(9, "Transformer", 4, 4);
 
-        store.changeWeight(2, 30);
+        store.changeWeight(1, 5);
 
-        store.drawPrizes(2);
-
-        store.getPrize();  // Congratulations! You won a Doll
-
-        store.getPrize();  // Congratulations! You won a Teddy bear
-
-        store.drawPrizes(1);
-
-        store.getPrize();  // Congratulations! You won a Doll
-
-        store.getPrize();  // No prizes left!
+        store.drawPrizes(10);
+        for (int i = 0; i < 10; i++) {
+            store.getPrize();
+            System.out.println("File name: " + store.getFileName());
+        }
     }
 }
