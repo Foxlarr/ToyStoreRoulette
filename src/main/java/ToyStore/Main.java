@@ -147,9 +147,8 @@ public class Main {
         store.addToy(2, "Hot Wheels", 20, 3, 2);
         store.addToy(3, "Lego", 20, 4, 3);
 
-
         // Изменяем вес id 1
-        store.changeWeight(1, 1);
+        store.changeWeight(1, 3);
 
         // Выдаем 10 призов и сохраняем их в файл
         store.drawPrizes(10);
